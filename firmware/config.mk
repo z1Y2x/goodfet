@@ -191,33 +191,34 @@ $(error Please define board, as explained in the README)
 endif
 #platform := $(board)
 
-AVAILABLE_APPS = monitor spi jtag sbw jtag430 jtag430x2 i2c jtagarm7 ejtag jtagxscale openocd chipcon avr pic adc nrf ccspi glitch smartcard ps2 slc2  maxusb atmel_radio cc2500
+AVAILABLE_APPS = monitor spi jtag sbw jtag430 jtag430x2 i2c jtagarm7 ejtag jtagxscale openocd chipcon avr pic adc nrf ccspi glitch smartcard ps2 slc2  maxusb atmel_radio cc2500 gpio
 
 # defaults
 CONFIG_monitor    ?= y
-CONFIG_spi        ?= y
-CONFIG_maxusb     ?= y
+CONFIG_spi        ?= n
+CONFIG_maxusb     ?= n
 CONFIG_jtag       ?= n
 CONFIG_sbw        ?= n
-CONFIG_jtag430    ?= y
-CONFIG_jtag430x2  ?= y
+CONFIG_jtag430    ?= n
+CONFIG_jtag430x2  ?= n
 CONFIG_i2c        ?= n
-CONFIG_jtagarm7   ?= y
+CONFIG_jtagarm7   ?= n
 CONFIG_ejtag      ?= n
 CONFIG_jtagxscale ?= n
-CONFIG_openocd    ?= y
-CONFIG_chipcon    ?= y
-CONFIG_avr        ?= y
+CONFIG_openocd    ?= n
+CONFIG_chipcon    ?= n
+CONFIG_avr        ?= n
 CONFIG_pic        ?= n
 CONFIG_adc        ?= n
 CONFIG_nrf        ?= n
 CONFIG_ccspi      ?= n
-CONFIG_cc2500     ?= y
+CONFIG_cc2500     ?= n
 CONFIG_glitch     ?= n
 CONFIG_smartcard  ?= n
 CONFIG_ps2        ?= n
 CONFIG_slc2       ?= n
 CONFIG_atmel_radio ?=n
+CONFIG_gpio 		 	?= y
 
 #The CONFIG_foo vars are only interpreted if $(config) is "unset".
 ifeq ($(config),undef)

@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+# GoodFET GPIO client
+# 
+# (C) 2009 Travis Goodspeed <travis at radiantmachines.com>
+# (C) 2013 Dave Huseby <dave at linuxprogrammer.org>
+#
+# This code is being rewritten and refactored.  You've been warned!
+
+import sys;
+import os;
+import binascii;
+import datetime;
+import time;
+
+from GoodFETGPIO import GoodFETGPIO
+from intelhex import IntelHex
+
+# add yocto/Sources to path since there is no __init__.py in yocto
+sys.path.append(os.path.join("yocto","Sources"))
+from yocto_api import *
+from yocto_current import *
+
+now_in_ms = lambda: int(round(time.time() * 1000))
+
+def die(msg):
+    sys.exit(msg+' (check USB cable)') 
+
+class YoctoCurrentModule:
+    def __init__(self):
+  
+        errmsg=YRefParam()
+        # Setup the API to use local USB devices
+        if YAPI.RegisterHub("usb", errmsg)!= YAPI.SUCCESS:
+            sys.exit("init error"+errmsg.value)
+  
+        sensor = YCurrent.FindCurrent('YAMPMK01-10818.current1')
+        if sensor is None :
+            die('No module connected')
+  
+        if sensor.isOnline():
+            self.module = sensor.get_module()
+            self.sensorDC = YCurrent.FindCurrent(self.module.get_serialNumber() + '.current1')
+        else:
+            die('Module not connected')
+  
+    def waitForZeroCurrent(self):
+        client.write_pin( 1, 0 )
+        current1 = self.sensorDC.get_currentValue()
+        while True:
+            current2 = self.sensorDC.get_currentValue()
+            if (current2 - current1) < 0.01:
+                print "\tWait for zero sees: %d mA" % (current2 - current1)
+                break;
+            current1 = current2
+
+    def timeNonZeroCurrent(self, client):
+        """get the baseline current and timestamp, set the pin
+           and loop until we see the current increase.  take a 
+           timestamp and return the time delta in ms """
+        base_current = self.sensorDC.get_currentValue()
+        client.write_pin( 1, 1 )
+        start = now_in_ms()
+        while True:
+            current = self.sensorDC.get_currentValue()
+            if (current - base_current) > 0:
+                stop = now_in_ms()
+                print "\tCurrent delta: %d mA" % (current - base_current)
+                break
+        return stop - start
+  
+if len(sys.argv) == 1:
+    print "Usage: %s verb [objects]\n" % sys.argv[0]
+    print "%s write <pin #> [0|1] -- set pin to high or low" % sys.argv[0]
+    print "%s read <pin #> -- read current value of pin" % sys.argv[0]
+    print "%s roundtrip <out pin #> [0|1] <in pin #> -- assert out pin, read value from in pin" % sys.argv[0]
+    print "%s time <repeat #> <log file> -- time how long it takes to assert pin and measure assertion" % sys.argv[0]
+    sys.exit();
+
+#Initailize FET and set baud rate
+client = GoodFETGPIO()
+client.serInit()
+
+#Connect to target
+client.setup()
+
+if sys.argv[1] == "write":
+    if len(sys.argv) < 4:
+        print "missing argument"
+        sys.exit()
+    pin = int(sys.argv[2])
+    v = int(sys.argv[3])
+    v = client.write_pin(pin, v)
+    print "\tSet to value: %d" % v
+
+elif sys.argv[1] == "read":
+    if len(sys.argv) < 3:
+        print "missing argument"
+        sys.exit()
+    pin = int(sys.argv[2])
+    v = client.read_pin( pin )
+    print "\tValue: %d" % v
+
+elif sys.argv[1] == "roundtrip":
+    if len(sys.argv) < 4:
+        print "missing argument"
+        sys.exit()
+    pout = int(sys.argv[2])
+    v = int(sys.argv[3])
+    pin = int(sys.argv[4])
+    v = client.round_trip( pout, v, pin )
+    print "\tValue: %d" % v
+
+elif sys.argv[1] == "time":
+    if len(sys.argv) < 4:
+        print "missing argument"
+        sys.exit()
+    repeat = int(sys.argv[2])
+    print "\tOpening log file: %s" % sys.argv[3]
+    log = open(sys.argv[3], 'w+')
+    yocto = YoctoCurrentModule()
+    for x in range(0,repeat):
+        print "\t%d" % x
+        yocto.waitForZeroCurrent()
+        time.sleep(0.5)
+        print >>log, "%d" % yocto.timeNonZeroCurrent(client)
+        time.sleep(0.5)
+    print "\tDone"
+

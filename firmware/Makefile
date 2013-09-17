@@ -62,6 +62,7 @@ CC =$(GCC) -Wall -O1 -fno-strict-aliasing -g   $(CCEXTRA)
 # glitch -- Glitch research tool
 # smartcard -- Smartcard IO
 # ps2 -- PS2 spy
+# misc -- manual pin I/O
 
 
 # Configurations
@@ -302,6 +303,12 @@ endif
 ifeq ($(filter jscan, $(config)), jscan)
 	apps+= apps/jscan/jscan.o
 	hdrs+= jscan.h
+endif
+
+# include gpio app
+ifeq ($(filter gpio, $(config)), gpio)
+	apps+= apps/gpio/gpio.o
+	hdrs+= gpio.h
 endif
 
 # Rules
