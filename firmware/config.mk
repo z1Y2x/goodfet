@@ -183,6 +183,15 @@ CFLAGS+= -Wall
 config := monitor chipcon i2c
 endif
 
+ifneq (,$(findstring $(board),teensy))
+GCC := avr-gcc
+CC := acr-gcc
+# Teensy 2.0
+mcu := atmega32u4
+platform := teensy
+CFLAGS=$(DEBUG) -Iinclude -mmcu=$(mcu) -Os -funsigned-char -funsigned-bitfields -ffunction-sections -fpack-struct -fshort-enums -Wall -Wstrict-prototypes
+config := monitor
+endif
 
 
 mcu ?= undef
@@ -201,7 +210,7 @@ CONFIG_jtag       ?= n
 CONFIG_sbw        ?= n
 CONFIG_jtag430    ?= y
 CONFIG_jtag430x2  ?= y
-CONFIG_i2c        ?= n
+CONFIG_i2c        ?= y
 CONFIG_jtagarm7   ?= y
 CONFIG_ejtag      ?= n
 CONFIG_jtagxscale ?= n

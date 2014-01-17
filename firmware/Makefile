@@ -81,7 +81,11 @@ ifeq ($(platform),tilaunchpad)
 libs= lib/$(platform).o lib/command.o lib/apps.o lib/msp430_serial.o
 #libs+=lib/setjmp.o
 else
+ifeq ($(platform),teensy)
+libs= lib/$(platform).o lib/command.o lib/apps.o lib/teensy_usb_serial.o $(extralibs)
+else
 libs= lib/$(mcu).o lib/command.o lib/dco_calib.o lib/apps.o lib/msp430.o lib/arduino.o $(extralibs)
+endif
 endif
 
 hdrs=
@@ -365,9 +369,9 @@ $(app): $(app).o $(libs) $(apps)
 armlink: $(app).o $(libs) $(apps) $(platformlibs)
 	arm-none-eabi-ld -v -Tlinkers/stm32f407.cmd -nostartfiles -o goodfet.elf $(app).o $(libs) $(apps)
 	arm-none-eabi-objcopy -Obinary goodfet.elf goodfet.bin
-ifeq ($(platform),donbfet)
+ifneq (,$(findstring $(platform),donbfet teensy))
 $(app).hex: $(app)
-	avr-objcopy -j .text -j .data -O ihex goodfet goodfet.hex
+	avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature goodfet goodfet.hex
 else
 $(app).hex: $(app)
 	msp430-objcopy goodfet -O ihex goodfet.hex

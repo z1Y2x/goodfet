@@ -32,6 +32,10 @@ void init(){
   #define INITCHIP arduino_init();
 #endif
 
+#ifdef TEENSY
+  #define INITCHIP teensy_init();
+#endif
+
 #if (platform == donbfet)
 # define INITCHIP donbfet_init();
 #endif
@@ -111,6 +115,9 @@ int main(void){
 #elif (platform == zigduino)
   extern void zigduino_reboot(void);
   void (*reboot_function)(void) = zigduino_reboot;
+#elif (platform == teensy)
+  extern void teensy_reboot(void);
+  void (*reboot_function)(void) = teensy_reboot;
 #else
   void (*reboot_function)(void) = (void *) 0xFFFE;
 #endif

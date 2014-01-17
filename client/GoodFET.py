@@ -222,12 +222,16 @@ class GoodFET:
                     #RTS pin, not DTR is used for reset.
                     self.serialport.setRTS(0);
                     #print "Resetting Apimote not yet tested.";
+                elif (os.environ.get("board")=='teensy'):
+                    self.serialport.write(chr(0x80));
+                    self.serialport.setTimeout(0.2);
                 else:
                     #Explicitly set RTS and DTR to halt board.
                     self.serialport.setRTS(1);
                     self.serialport.setDTR(1);
                     #Drop DTR, which is !RST, low to begin the app.
                     self.serialport.setDTR(0);
+
                 
                 #self.serialport.write(chr(0x80));
                 #self.serialport.write(chr(0x80));
@@ -729,6 +733,8 @@ class GoodFET:
         """Get the clocking value."""
         if(os.environ.get("platform")=='arduino' or os.environ.get("board")=='arduino'):
             return 0xDEAD;
+        elif(os.environ.get("platform")=='teensy' or os.environ.get("board")=='teensy'):
+            return 0xDEAD;
         #Check for MSP430 before peeking this.
         return self.MONpeek16(0x56);
     # The following functions ought to be implemented in
@@ -737,6 +743,8 @@ class GoodFET:
     def infostring(self):
         if(os.environ.get("platform")=='arduino' or os.environ.get("board")=='arduino'):
             return "Arduino";
+        elif(os.environ.get("platform")=='teensy' or os.environ.get("board")=='teensy'):
+            return "Teensy";
         else:
             a=self.MONpeek8(0xff0);
             b=self.MONpeek8(0xff1);
